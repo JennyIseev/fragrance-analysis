@@ -37,11 +37,28 @@ Kurzer Schritt-für-Schritt-Block: Repo klonen, venv erstellen, pip install -r r
 Falls du eine requirements.txt noch nicht hast: unbedingt erstellen (pip freeze > requirements.txt), sonst kann niemand dein Projekt nachvollziehen
 
 ## Data
-This project uses the [Parfumo dataset](https://www.kaggle.com/datasets/ibrahimqasimi/parfumo-perfume-database-59k-fragrances) from Kaggle, 
-licensed under CC0: Public Domain.
+The dataset was originally compiled by Olga G. Miufana via web scraping of Parfumo.com (CC0 license) and was later republished on Kaggle as "Parfumo Perfume Database 59K Fragrances" by ibrahimqasimi.  
 
-Anzahl Zeilen/Spalten, was für Felder enthalten sind (grober Überblick: Name, Brand, Accords, Rating, Release Year etc.)
-Hinweis, falls die Rohdaten nicht im Repo liegen (meist zu groß für Git), sondern nur der Download-Link
+⚠️ The Kaggle link is now no longer reachable (404).   
+To ensure reproducibility, the file is also included directly in this repository under `data/02_Parfumo_Perfumes.csv`.  
+
+The dataset contains 59,325 entries for different fragrances from 1451 brands.   
+The column structure is as following:
+
+| Column | Description |
+|--------|-------------|
+| Number | Internal Parfumo ID |
+| Name | Perfume name |
+| Brand | Fragrance house |
+| Release_Year | Year first released |
+| Concentration | EdT, EdP, Parfum, Cologne, After Shave, etc. |
+| Rating_Value | Average user rating |
+| Rating_Count | Number of user ratings |
+| Main_Accords | Dominant scent families |
+| Top / Middle / Base_Notes | Notes smelled over time |
+| Perfumers | Creator name(s) |
+| URL | Link to the full entry |
+
 
 ## Exploratory Data Analysis
 Kurzer Überblick über deine Vorgehensweise: Cleaning-Schritte (fehlende Werte, Duplikate, Datentyp-Fixes), welche Explorationsschritte du gemacht hast
