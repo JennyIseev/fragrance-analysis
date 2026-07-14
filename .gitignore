@@ -13,4 +13,4 @@ wheels/
 beginnings.ipynb
 
 # Reproducible data (regenerate via notebooks/01_cleaning.ipynb)
-data/cleaned_data.csv
+data/cleaned_data.parquet
