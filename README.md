@@ -1,7 +1,7 @@
 ﻿# Fragrance Analysis
 An exploratory data analysis of 59,000 fragrances from the Parfumo database, uncovering trends in scent composition, niche vs. designer positioning, and what drives high ratings.
 
-![Python](https://img.shields.io/badge/python-3.13.5-blue) ![License](https://img.shields.io/github/license/JennyIseev/fragrance-analysis)
+![Python](https://img.shields.io/badge/python-3.13.5-blue) ![License](https://img.shields.io/github/license/JennyIseev/fragrance-analysis) ![Environment](https://img.shields.io/badge/environment-uv-de5fe9) ![Status](https://img.shields.io/badge/status-in%20progress-yellow) ![Made with Jupyter](https://img.shields.io/badge/made%20with-Jupyter-orange?logo=jupyter&logoColor=white)
 
 
 
