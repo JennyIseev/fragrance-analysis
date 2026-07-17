@@ -1,8 +1,8 @@
-﻿# Fragrance Analysis
+# Fragrance Analysis
 
 An exploratory data analysis of 59,000 fragrances from the Parfumo database, uncovering trends in scent composition, niche vs. designer positioning, and what drives high ratings.
 
-![Python](https://img.shields.io/badge/python-3.13.5-blue) ![License](https://img.shields.io/github/license/JennyIseev/fragrance-analysis) ![Environment](https://img.shields.io/badge/environment-uv-de5fe9)  ![Made with Jupyter](<https://img.shields.io/badge/made%20with-Jupyter-orange?logo=jupyter&logoColor=white>) ![Status](<https://img.shields.io/badge/status-in%20progress-yellow>)
+![Python](https://img.shields.io/badge/python-3.13.5-blue) ![License](https://img.shields.io/github/license/JennyIseev/fragrance-analysis) ![Environment](https://img.shields.io/badge/environment-uv-de5fe9)  ![Made with Jupyter](<https://img.shields.io/badge/made%20with-Jupyter-orange?logo=jupyter&logoColor=white>) ![Status](<https://img.shields.io/badge/status-complete-brightgreen>)
 
 **[View the presentation deck](https://docs.google.com/presentation/d/1FZA2tMdAsJHUkRDgVOeMH3OOZcHjSdEQ/edit?usp=sharing&ouid=106881747495107562844&rtpof=true&sd=true)**: a 10-minute walkthrough of the whole project.
 
@@ -37,13 +37,18 @@ The analysis is spread across three notebooks: [`01_cleaning.ipynb`](notebooks/0
 ## Project Structure
 
 ```
-StackFuel_Projekt/
+fragrance-analysis/
 ├── data/
-│   └── 02_Parfumo_Perfumes.csv    # raw scraped dataset
+│   └── 02_Parfumo_Perfumes.csv.gz # raw scraped dataset (gzip-compressed)
 ├── notebooks/
 │   ├── 01_cleaning.ipynb          # data cleaning & feature engineering
 │   ├── 02_EDA.ipynb               # exploratory analysis & statistical testing
 │   └── 03_limitations.ipynb       # known data-quality limitations log
+├── src/fragrance_analysis/        # logic extracted out of the notebooks
+│   ├── concentration.py           # Concentration -> Concentration_Group classifier
+│   ├── brands.py                  # Brand -> Brand_Category classifier
+│   └── ratings.py                 # Bayesian shrinkage weighted-rating estimator, Cohen's d
+├── tests/                         # pytest tests for src/fragrance_analysis
 ├── images/                        # chart exports used in this README
 ├── pyproject.toml                 # project dependencies (uv)
 ├── uv.lock
@@ -61,7 +66,13 @@ cd fragrance-analysis
 uv sync
 ```
 
-This creates a `.venv` and installs all dependencies pinned in `uv.lock` (pandas, matplotlib, seaborn, statsmodels, pyarrow, ipykernel).
+This creates a `.venv` and installs all dependencies pinned in `uv.lock` (pandas, matplotlib, seaborn, statsmodels, pyarrow, ipykernel, pytest), plus an editable install of `src/fragrance_analysis` so the notebooks can import it directly.
+
+Run the test suite with:
+
+```bash
+uv run pytest
+```
 
 ## Usage
 
@@ -69,14 +80,14 @@ Start Jupyter (`uv run jupyter lab`) and run the notebooks in order, since each 
 
 1. [`01_cleaning.ipynb`](notebooks/01_cleaning.ipynb) – cleans the raw data and writes `data/cleaned_data.parquet`
 2. [`02_EDA.ipynb`](notebooks/02_EDA.ipynb) – loads the cleaned data and runs the analysis
-3. [`03_limitations.ipynb`](notebooks/03_limitations.ipynb) – standalone log of limitations found in either step above
+3. [`03_limitations.ipynb`](notebooks/03_limitations.ipynb) – also loads `data/cleaned_data.parquet` (requires step 1); logs limitations found in either step above
 
 ## Data
 
 The dataset was originally compiled by Olga G. Miufana via web scraping of Parfumo.com (CC0 license) and was later republished on Kaggle as "Parfumo Perfume Database 59K Fragrances" by ibrahimqasimi.
 
 ⚠️ The Kaggle link is now no longer reachable (404).
-To ensure reproducibility, the file is also included directly in this repository under `data/02_Parfumo_Perfumes.csv`.
+To ensure reproducibility, the file is also included directly in this repository under `data/02_Parfumo_Perfumes.csv.gz` (`pandas.read_csv` reads gzip natively).
 
 The dataset contains 59,325 entries for different fragrances from 1451 brands.
 The column structure is as following:
@@ -97,9 +108,9 @@ The column structure is as following:
 
 ## Exploratory Data Analysis
 
-`01_cleaning.ipynb` takes the raw 59,325-row scrape and works through it in stages: checking missingness per column, dropping rows with no usable identifiers (missing name/brand, placeholder names, 9 fully duplicated rows, 35 rows sharing corrupted duplicate URLs), fixing systematic mislabeling where a fragrance's release year had been scraped into its name field, and converting `Release_Year`/`Rating_Count` to proper integer types. It also standardizes the comma-separated `Main_Accords`/`Notes`/`Perfumers` fields (stripping whitespace) and engineers two new features: a `Concentration_Group` (collapsing 412 raw concentration strings into 10 categories via keyword rules) and a `Brand_Category` (Designer / Niche / Unclassified, based on a manually curated list of ~300 brands). The cleaned result (59,239 rows) is exported to `data/cleaned_data.parquet`.
+`01_cleaning.ipynb` takes the raw 59,325-row scrape and works through it in stages: checking missingness per column, dropping rows with no usable identifiers (missing name/brand, placeholder names, 9 fully duplicated rows, 35 rows sharing corrupted duplicate URLs), fixing systematic mislabeling where a fragrance's release year had been scraped into its name field, and converting `Release_Year`/`Rating_Count` to proper integer types. It also standardizes the comma-separated `Main_Accords`/`Notes`/`Perfumers` fields (stripping whitespace) and engineers two new features: a `Concentration_Group` (collapsing 412 raw concentration strings into 10 categories via the keyword classifier in [`src/fragrance_analysis/concentration.py`](src/fragrance_analysis/concentration.py)) and a `Brand_Category` (Designer / Niche / Unclassified, based on a manually curated list of ~300 brands). The cleaned result (59,239 rows) is exported to `data/cleaned_data.parquet`.
 
-`02_EDA.ipynb` uses that cleaned data to answer the key questions above: the shape of the rating distribution, the relationship between rating count and rating value, and whether niche brands really outrate designer ones. A brand-level Bayesian shrinkage estimator (the same principle as IMDB's weighted rating) is built to rank brands fairly despite wildly different rating volumes, then tested with ANOVA, Tukey's HSD, and Cohen's d to confirm the niche-vs-designer gap holds up under scrutiny.
+`02_EDA.ipynb` uses that cleaned data to answer the key questions above: the shape of the rating distribution, the relationship between rating count and rating value, and whether niche brands really outrate designer ones. A brand-level Bayesian shrinkage estimator (the same principle as IMDB's weighted rating, implemented in [`src/fragrance_analysis/ratings.py`](src/fragrance_analysis/ratings.py)) is built to rank brands fairly despite wildly different rating volumes, then tested with ANOVA, Welch's ANOVA, Tukey's HSD, and Cohen's d to confirm the niche-vs-designer gap holds up under scrutiny. Both extracted modules are covered by tests in [`tests/`](tests/).
 
 Data-quality issues that surfaced along the way (a per-brand scraping cap at 20 fragrances, stale ratings on discontinued fragrances skewing brand rankings) are logged separately in `03_limitations.ipynb` rather than cluttering the analysis notebooks.
 
@@ -119,8 +130,9 @@ Data-quality issues that surfaced along the way (a per-brand scraping cap at 20 
 - pandas / numpy — data cleaning, feature engineering
 - pyarrow — Parquet I/O
 - matplotlib / seaborn — visualization
-- scipy / statsmodels — hypothesis testing (t-test, ANOVA, Tukey's HSD), OLS regression
+- scipy / statsmodels — hypothesis testing (t-test, ANOVA, Tukey's HSD, Welch's ANOVA), OLS regression
 - Jupyter — notebooks
+- pytest — tests for `src/fragrance_analysis`
 - uv — dependency and environment management
 
 ## Limitations & Next Steps

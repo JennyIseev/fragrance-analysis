@@ -15,3 +15,6 @@ help.ipynb
 
 # Reproducible data (regenerate via notebooks/01_cleaning.ipynb)
 data/cleaned_data.parquet
+
+# Superseded by the gzip-compressed copy (data/02_Parfumo_Perfumes.csv.gz)
+data/02_Parfumo_Perfumes.csv
